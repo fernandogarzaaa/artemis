@@ -14,6 +14,7 @@
 
 import asyncio
 import base64
+import functools
 import hashlib
 import json
 from pathlib import Path
@@ -200,14 +201,15 @@ async def perception_node(state: State, ctx: ArtemisContext) -> dict:
     # 4. Fuse OCR with XML (if ocr_results is empty, returns original xml_hierarchy intact)
     fused_xml = fuse_ocr_with_xml(xml_hierarchy, ocr_results)
 
-    # 5. Save to Data Engine in background thread
+    # 5. Save to Data Engine in background thread (tracked, so tests and
+    # shutdown can await it via engine._pending_tasks)
     image_name = None
     screenshot_path = None
     if ctx.data_engine:
         image_name = hashlib.sha256(latest_screenshot_bytes).hexdigest()
         screenshot_path = str(ctx.data_engine.get_image_path(image_name))
-        asyncio.create_task(
-            asyncio.to_thread(
+        ctx.data_engine._run_in_background(
+            functools.partial(
                 ctx.data_engine.get_or_create_image,
                 latest_screenshot_bytes,
                 ui_tree=xml_hierarchy,

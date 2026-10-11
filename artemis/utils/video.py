@@ -600,7 +600,7 @@ async def render_timeline_clip(
             )
             filter_parts.append(
                 f"[{index}:v:0]trim=duration={duration:.6f},setpts=PTS-STARTPTS,"
-                f"setsar=1,format=yuv420p[{label}]"
+                f"setsar=1,fps={fps},format=yuv420p[{label}]"
             )
         else:
             _kind, path, local_start, local_end = piece

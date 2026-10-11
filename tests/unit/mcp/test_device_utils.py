@@ -24,9 +24,12 @@ def test_ensure_emulator_uses_windows_creation_flags(monkeypatch) -> None:
     )
 
     kwargs = popen.call_args.kwargs
-    assert kwargs["creationflags"] == (
-        device_utils.subprocess.CREATE_NEW_PROCESS_GROUP | device_utils.subprocess.DETACHED_PROCESS
+    # These constants only exist on Windows; getattr keeps the test meaningful
+    # on Linux/macOS where sys.platform is mocked to win32.
+    expected_flags = getattr(device_utils.subprocess, "CREATE_NEW_PROCESS_GROUP", 0) | getattr(
+        device_utils.subprocess, "DETACHED_PROCESS", 0
     )
+    assert kwargs["creationflags"] == expected_flags
     assert "start_new_session" not in kwargs
 
 

@@ -141,12 +141,17 @@ def ensure_emulator(
     try:
         command = [emu_exe, "-avd", avd_name, "-no-snapshot", "-grpc", "8554"]
         if sys.platform == "win32":
+            # getattr: these constants only exist on Windows; the branch is
+            # unreachable elsewhere, but tests mock sys.platform on Linux.
+            creationflags = getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0) | getattr(
+                subprocess, "DETACHED_PROCESS", 0
+            )
             subprocess.Popen(
                 command,
                 stdin=subprocess.DEVNULL,
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
-                creationflags=(subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.DETACHED_PROCESS),
+                creationflags=creationflags,
             )
         else:
             subprocess.Popen(
